@@ -6,21 +6,36 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 
 public class Client {
 
 	private Socket socket;
 	private BufferedReader bufferedReader;
 	private BufferedWriter bufferedWriter;
-	private String username;
+	private String clientName;
 	
 	
-	public Client(Socket socket, String username) {
+	static Connection connection = null;
+	static String databaseName = "login";
+	static String url = "jdbc:mysql://localhost:3306/" + databaseName;
+	
+	static String username = "root";
+	static String password = "Friday123!";
+	
+	
+	public Client(Socket socket, String clientName) {
 		try {
 			this.socket = socket;
 			this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			this.username = username;
+			this.clientName = clientName;
 		} catch(IOException e) {
 			closeEverything(socket, bufferedReader, bufferedWriter);
 		}
@@ -28,14 +43,14 @@ public class Client {
 	
 	public void sendMessage() {
 		try {
-			bufferedWriter.write(username);
+			bufferedWriter.write(clientName);
 			bufferedWriter.newLine();
 			bufferedWriter.flush();
 			
 			Scanner scanner = new Scanner(System.in);
 			while(socket.isConnected()) {
 				String messageToSend = scanner.nextLine();
-				bufferedWriter.write(username + ": " + messageToSend);
+				bufferedWriter.write(clientName + ": " + messageToSend);
 				bufferedWriter.newLine();
 				bufferedWriter.flush();
 			}
@@ -79,14 +94,92 @@ public class Client {
 		}
 	}
 	
-	public static void main(String[] args) throws UnknownHostException, IOException {
-		Scanner scanner = new Scanner(System.in);
-		System.out.println("Enter your usernmae for the group chat: ");
-		String username = scanner.nextLine();
+	
+	public static boolean validateUser(Connection connection, String clientName) {
+		String query = "SELECT * FROM login.users WHERE idusers=\'" + clientName + "\'";
+		try {
+			Statement stmt = connection.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			if(rs.next())
+				return true;
+			else
+				return false;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	public static boolean validatePsswd(Connection connection, String clientName, String psswd) {
+		String query = "SELECT * FROM login.users WHERE idusers=? and psswd=?";
+		PreparedStatement stmt = null;
+		boolean success = false;
+		try {
+			stmt = connection.prepareStatement(query);
+			stmt.setString(1, clientName);
+			stmt.setString(2, psswd);
+			ResultSet rs = stmt.executeQuery();
+			if(rs.next())
+				success = true;
+			rs.close();
+		}catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				stmt.close();
+				
+			}catch (Exception e) {
+				
+			}
+		}
 		
-		Socket socket = new Socket("localhost", 1234);
-		Client client = new Client(socket, username);
-		client.listenForMessage();
-		client.sendMessage();
+		return success;
+	}
+	
+	public static void main(String[] args) throws UnknownHostException, IOException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException  {
+		Class.forName("com.mysql.jdbc.Driver").newInstance();
+		try (Connection connection = DriverManager.getConnection(url, username, password);) {
+		 	System.out.println("Database Connected!");
+		 	
+		 	Scanner scanner = new Scanner(System.in);
+		 	String clientName;
+		 	
+		 	while(true) {
+				System.out.println("Enter your usernmae for the group chat: ");
+				clientName = scanner.nextLine();
+				
+				if(validateUser(connection, clientName)) {
+					System.out.println("User found, enter password: ");
+					String psswd = scanner.nextLine();
+					//Add encryption algorithm
+					if(validatePsswd(connection, clientName, psswd)) {
+						System.out.println("Logging in...");
+						break;
+					}
+					else
+						System.out.println("Username and Password pair incorrect");
+					
+				}
+				else {
+					System.out.println("User not found, retry");
+				}
+		 	}
+			
+		 	Socket socket = new Socket("localhost", 1234);
+			Client client = new Client(socket, clientName);
+			System.out.println("You are connected!");
+			client.listenForMessage();
+			client.sendMessage();
+	       }
+	       // Handle any errors that may have occurred.
+	       catch (SQLException e) {
+	           e.printStackTrace();
+	       }
+		 
+		
+		
+		
+	
 	}
 }
