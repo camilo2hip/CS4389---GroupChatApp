@@ -1,20 +1,38 @@
 package soketGroupChat;
 
+import AES.AES;
+import AES.AESUtil;
+import RSA.RSAKeyPairGenerator;
+import RSA.RSAUtil;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
 
 public class ClientHandler implements Runnable{
 
 	public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
+	public static HashMap<String, RSAKeyPairGenerator> map =  new HashMap<>();
 	private Socket socket;
 	private BufferedReader bufferedReader;
 	private BufferedWriter bufferedWriter;
 	private String clientUsername;
+	private RSAKeyPairGenerator keyPairGenerator;
+	//private String AESkey = "d8VBc9D7mrA=";
+
 	
 	public ClientHandler(Socket socket) {
 		try {
@@ -22,9 +40,20 @@ public class ClientHandler implements Runnable{
 			this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			this.clientUsername = bufferedReader.readLine();
+
+
+			//Generate the user's public and private key and save it in an encoded file
+			this.keyPairGenerator = new RSAKeyPairGenerator();
+			String publicPath = clientUsername + "/publicKey";
+			String privatePath = clientUsername + "/privateKey";
+			keyPairGenerator.writeToFile(publicPath, keyPairGenerator.getPublicKey().getEncoded());
+			keyPairGenerator.writeToFile(privatePath, keyPairGenerator.getPrivateKey().getEncoded());
 			clientHandlers.add(this);
+			map.put(clientUsername, keyPairGenerator);
+
 			broadcastMessage("SERVER: " + clientUsername + " has entered the chat!");
-		} catch(IOException e) {
+
+		} catch(IOException | NoSuchAlgorithmException e) {
 			closeEverything(socket, bufferedReader, bufferedWriter);
 		}
 	}
@@ -37,6 +66,7 @@ public class ClientHandler implements Runnable{
 		while(socket.isConnected()) {
 			try {
 				messageFromClient = bufferedReader.readLine();
+
 				broadcastMessage(messageFromClient);
 			} catch(IOException e) {
 				closeEverything(socket, bufferedReader, bufferedWriter);
@@ -47,20 +77,46 @@ public class ClientHandler implements Runnable{
 	
 	
 	public void broadcastMessage(String messageToSend) {
+		String publicKey;
+		String privateKey;
 		for(ClientHandler clientHandler: clientHandlers) {
 			try {
 				if(!clientHandler.clientUsername.equals(clientUsername)) {
-					clientHandler.bufferedWriter.write(messageToSend);
+
+					publicKey =  Base64.getEncoder().encodeToString(map.get(clientUsername).getPublicKey().getEncoded());
+
+					privateKey = Base64.getEncoder().encodeToString(map.get(clientUsername).getPrivateKey().getEncoded());
+
+
+					AES aes = new AES();
+
+					//get the AES secret key
+					SecretKey aesKey = aes.init();
+
+					//encrypt the message to be sent using AES
+					String encryptedMessage = aes.encrypt(messageToSend,aesKey);
+
+					//convert AES key to string
+					String encodedAesKey = AESUtil.convertSecretKeyToString(aesKey);
+
+					//encrypt the encoded AES key using RSA
+					byte[] encryptedAesKey = RSAUtil.encrypt(encodedAesKey, publicKey);
+
+
+					String valueToSend = encryptedAesKey + "--" + privateKey + "--" + encryptedMessage;
+					clientHandler.bufferedWriter.write(valueToSend);
 					clientHandler.bufferedWriter.newLine();
 					clientHandler.bufferedWriter.flush();
 				}
-			} catch(IOException e) {
+			} catch(IOException | BadPaddingException | IllegalBlockSizeException | InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException e) {
 				closeEverything(socket, bufferedReader, bufferedWriter);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}
-	
-	
+
+
 	public void removeClientHandler() {
 		clientHandlers.remove(this);
 		broadcastMessage("Server " + clientUsername + " has left the chat!");

@@ -1,11 +1,14 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+package Client;
+
+import AES.AES;
+import RSA.RSAUtil;
+import AES.AESUtil;
+import javax.crypto.SecretKey;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
+
 
 public class Client {
 
@@ -13,14 +16,18 @@ public class Client {
 	private BufferedReader bufferedReader;
 	private BufferedWriter bufferedWriter;
 	private String username;
+
+
+	//add public and private key
 	
-	
-	public Client(Socket socket, String username) {
+	public Client(Socket socket, String username) throws IOException {
 		try {
 			this.socket = socket;
 			this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			this.username = username;
+
+
 		} catch(IOException e) {
 			closeEverything(socket, bufferedReader, bufferedWriter);
 		}
@@ -49,13 +56,33 @@ public class Client {
 			@Override
 			public void run() {
 				String msgFromGroupChat;
-				
+
 				while(socket.isConnected()) {
 					try {
 						msgFromGroupChat = bufferedReader.readLine();
-						System.out.println(msgFromGroupChat);
+
+						String[] parts = msgFromGroupChat.split("--");
+						String encryptedAESKey = parts[0];
+						String privateKey = parts[1];
+						String encryptedMessage = parts[2];
+
+
+						//Decrypt the AES key encrypted with the client's public key using the client's private key
+						String decryptedAesKey = RSAUtil.decrypt(encryptedAESKey, privateKey);
+
+						//get the AES key
+						SecretKey aesKey = AESUtil.convertStringToSecretKeyto(decryptedAesKey);
+
+
+						//Decrypt the encrypted message using the decrypted AES key
+						String decryptedMessage = AES.decrypt(encryptedMessage, aesKey);
+
+						//display the message
+						System.out.println(decryptedMessage);
 					} catch (IOException e) {
 						closeEverything(socket, bufferedReader, bufferedWriter);
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
 			}
@@ -64,7 +91,7 @@ public class Client {
 	
 	
 	public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
-		try {
+		try{
 			if (bufferedReader != null) {
 				bufferedReader.close();
 			}
@@ -81,7 +108,8 @@ public class Client {
 	
 	public static void main(String[] args) throws UnknownHostException, IOException {
 		Scanner scanner = new Scanner(System.in);
-		System.out.println("Enter your usernmae for the group chat: ");
+		System.out.println("Enter your username for the group chat: ");
+
 		String username = scanner.nextLine();
 		
 		Socket socket = new Socket("localhost", 1234);
