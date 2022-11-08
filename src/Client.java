@@ -95,22 +95,6 @@ public class Client {
 	}
 	
 	
-	public static boolean validateUser(Connection connection, String clientName) {
-		String query = "SELECT * FROM login.users WHERE idusers=\'" + clientName + "\'";
-		try {
-			Statement stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery(query);
-			if(rs.next())
-				return true;
-			else
-				return false;
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return false;
-	}
-	
 	public static boolean validatePsswd(Connection connection, String clientName, String psswd) {
 		String query = "SELECT * FROM login.users WHERE idusers=? and psswd=?";
 		PreparedStatement stmt = null;
@@ -148,21 +132,15 @@ public class Client {
 		 	while(true) {
 				System.out.println("Enter your usernmae for the group chat: ");
 				clientName = scanner.nextLine();
-				
-				if(validateUser(connection, clientName)) {
-					System.out.println("User found, enter password: ");
-					String psswd = scanner.nextLine();
-					//Add encryption algorithm
-					if(validatePsswd(connection, clientName, psswd)) {
-						System.out.println("Logging in...");
-						break;
-					}
-					else
-						System.out.println("Username and Password pair incorrect");
-					
+				System.out.println("Enter Password");
+				String psswd = scanner.nextLine();
+				if(validatePsswd(connection, clientName, psswd)) {
+					System.out.println("Logging in...");
+					break;
 				}
+				
 				else {
-					System.out.println("User not found, retry");
+					System.out.println("Username or Password incorrect, retry");
 				}
 		 	}
 			
