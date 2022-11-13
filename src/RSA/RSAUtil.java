@@ -14,6 +14,7 @@ public class RSAUtil {
 public static PublicKey getPublicKey(String base64PublicKey){
         PublicKey publicKey = null;
         try{
+
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(base64PublicKey.getBytes()));
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         publicKey = keyFactory.generatePublic(keySpec);
@@ -56,7 +57,7 @@ public static String decrypt(byte[] data, PrivateKey privateKey) throws NoSuchPa
         }
 
 public static String decrypt(String data, String base64PrivateKey) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
-        return decrypt(Base64.getDecoder().decode(data.getBytes()), getPrivateKey(base64PrivateKey));
+        return decrypt(Base64.getMimeDecoder().decode(data.getBytes()), getPrivateKey(base64PrivateKey));
         }
 
 public static void main(String[] args) throws IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, BadPaddingException {

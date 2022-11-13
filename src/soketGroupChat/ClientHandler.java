@@ -18,6 +18,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -51,7 +52,7 @@ public class ClientHandler implements Runnable{
 			clientHandlers.add(this);
 			map.put(clientUsername, keyPairGenerator);
 
-			broadcastMessage("SERVER: " + clientUsername + " has entered the chat!");
+			broadcastMessage("SERVER: " + clientUsername + " entered the chat!");
 
 		} catch(IOException | NoSuchAlgorithmException e) {
 			closeEverything(socket, bufferedReader, bufferedWriter);
@@ -87,11 +88,18 @@ public class ClientHandler implements Runnable{
 
 					privateKey = Base64.getEncoder().encodeToString(map.get(clientUsername).getPrivateKey().getEncoded());
 
+					//encrypt the message to be sent using RSA
+					//byte[] encryptedMessage = RSAUtil.encrypt(messageToSend,publicKey);
+
+					// byte[] to string
+					// encode, convert byte[] to base64 encoded string
+					//String s = Base64.getEncoder().encodeToString(encryptedMessage);
+
 
 					AES aes = new AES();
 
 					//get the AES secret key
-					SecretKey aesKey = aes.init();
+					SecretKey aesKey = aes.init("secret", "salt");
 
 					//encrypt the message to be sent using AES
 					String encryptedMessage = aes.encrypt(messageToSend,aesKey);
@@ -100,15 +108,17 @@ public class ClientHandler implements Runnable{
 					String encodedAesKey = AESUtil.convertSecretKeyToString(aesKey);
 
 					//encrypt the encoded AES key using RSA
-					byte[] encryptedAesKey = RSAUtil.encrypt(encodedAesKey, publicKey);
+					byte[] encryptedAesKeyAsByte = RSAUtil.encrypt(encodedAesKey, publicKey);
+
+					String encryptedAesKeyAsString = Base64.getEncoder().encodeToString(encryptedAesKeyAsByte);
 
 
-					String valueToSend = encryptedAesKey + "--" + privateKey + "--" + encryptedMessage;
+					String valueToSend = privateKey + "--" + encryptedAesKeyAsString + "--" + encryptedMessage;
 					clientHandler.bufferedWriter.write(valueToSend);
 					clientHandler.bufferedWriter.newLine();
 					clientHandler.bufferedWriter.flush();
 				}
-			} catch(IOException | BadPaddingException | IllegalBlockSizeException | InvalidKeyException | NoSuchPaddingException | NoSuchAlgorithmException e) {
+			} catch(IOException | BadPaddingException | IllegalBlockSizeException | InvalidKeyException | NoSuchAlgorithmException e) {
 				closeEverything(socket, bufferedReader, bufferedWriter);
 			} catch (Exception e) {
 				e.printStackTrace();

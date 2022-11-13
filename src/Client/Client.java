@@ -7,6 +7,7 @@ import javax.crypto.SecretKey;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Base64;
 import java.util.Scanner;
 
 
@@ -62,10 +63,10 @@ public class Client {
 						msgFromGroupChat = bufferedReader.readLine();
 
 						String[] parts = msgFromGroupChat.split("--");
-						String encryptedAESKey = parts[0];
-						String privateKey = parts[1];
-						String encryptedMessage = parts[2];
 
+						String privateKey = parts[0];
+						String encryptedAESKey = parts[1];
+						String encryptedMessage = parts[2];
 
 						//Decrypt the AES key encrypted with the client's public key using the client's private key
 						String decryptedAesKey = RSAUtil.decrypt(encryptedAESKey, privateKey);
@@ -73,12 +74,15 @@ public class Client {
 						//get the AES key
 						SecretKey aesKey = AESUtil.convertStringToSecretKeyto(decryptedAesKey);
 
-
 						//Decrypt the encrypted message using the decrypted AES key
 						String decryptedMessage = AES.decrypt(encryptedMessage, aesKey);
 
+
+						//String decryptedMessage = RSAUtil.decrypt(encryptedMessage, privateKey);
+
 						//display the message
 						System.out.println(decryptedMessage);
+
 					} catch (IOException e) {
 						closeEverything(socket, bufferedReader, bufferedWriter);
 					} catch (Exception e) {
