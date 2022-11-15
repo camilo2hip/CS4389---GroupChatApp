@@ -15,6 +15,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 
 
@@ -148,6 +151,40 @@ public class Client {
 		return success;
 	}
 	
+	private static String encrypt(String psswd) throws NoSuchAlgorithmException {
+		String salt = getSalt();
+		String securePassword = get_SHA_256_SecurePassword(psswd, salt);
+        //System.out.println(securePassword);
+        return securePassword;
+	}
+	
+	private static String getSalt() throws NoSuchAlgorithmException {
+        SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
+        byte[] salt = new byte[16];
+        sr.nextBytes(salt);
+        return salt.toString();
+    }
+	
+	private static String get_SHA_256_SecurePassword(String passwordToHash,
+            String salt) {
+        String generatedPassword = null;
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(salt.getBytes());
+            byte[] bytes = md.digest(passwordToHash.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < bytes.length; i++) {
+                sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16)
+                        .substring(1));
+            }
+            generatedPassword = sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return generatedPassword;
+    }
+
+	
 	public static void main(String[] args) throws UnknownHostException, IOException, InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException  {
 		Class.forName("com.mysql.jdbc.Driver").newInstance();
 		try (Connection connection = DriverManager.getConnection(url, username, password);) {
@@ -155,20 +192,30 @@ public class Client {
 		 	
 		 	Scanner scanner = new Scanner(System.in);
 		 	String clientName;
+		 	String psswd;
+		 	String encPsswd;
 		 	
 		 	while(true) {
 				System.out.println("Enter your usernmae for the group chat: ");
 				clientName = scanner.nextLine();
 				System.out.println("Enter Password");
-				String psswd = scanner.nextLine();
-				if(validatePsswd(connection, clientName, psswd)) {
-					System.out.println("Logging in...");
-					break;
-				}
+				psswd = scanner.nextLine();
+				try {
+					encPsswd = encrypt(psswd);
+					if(validatePsswd(connection, clientName, encPsswd)) {
+						System.out.println("Logging in...");
+						break;
+					}
+					else {
+						System.out.println("Username or Password incorrect, retry");
+					}
+				} catch (NoSuchAlgorithmException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
 				
-				else {
-					System.out.println("Username or Password incorrect, retry");
-				}
+				
+				
 		 	}
 			
 		 	Socket socket = new Socket("localhost", 1234);
