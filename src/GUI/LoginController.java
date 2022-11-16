@@ -26,12 +26,14 @@ public class LoginController {
         String password = passwordTextField.getText();
         String username = usernameTextField.getText();
         
-        if(Client.validationTest(username, password)) {
+        if(Client.validateUser(username, password)) {
 			System.out.println("Logging in...");
 			welcomeText.setText("Logging in...");
 			Stage stage = (Stage) loginButton.getScene().getWindow();
         	stage.close();
+        	
         	GUIResources.setChatRoomScene(stage);
+        	GUIResources.User = username;
 			
 		}
         else {

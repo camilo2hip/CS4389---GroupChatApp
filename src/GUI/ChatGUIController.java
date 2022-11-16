@@ -10,6 +10,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import Client.Client;
 
 public class ChatGUIController 
 {
@@ -17,13 +18,14 @@ public class ChatGUIController
 	@FXML private TextArea messageTextDisplayArea;
 	@FXML private TextField messageTextField;
 	@FXML private Button messageSendButton;
+	public static String username = "DefaultName";
 
     @FXML
     public void onSendButtonClick() throws IOException 
     {
         String message = messageTextField.getText();
         messageTextField.clear();
-        messageTextDisplayArea.appendText("UserA: " + message + "\n");
+        messageTextDisplayArea.appendText(Client.getUsername() + ": " + message + "\n");
     }
 
     @FXML

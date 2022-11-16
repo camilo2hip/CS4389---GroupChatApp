@@ -14,6 +14,7 @@ import java.io.IOException;
 public class GUIResources extends Application 
 {
 	static Scene scene;
+	static String User;
 	@Override
 	public void start(Stage stage) throws IOException 
 	{

@@ -48,7 +48,7 @@ public class Client{
 	static String url = "jdbc:mysql://localhost:3306/" + databaseName;
 	
 	static String dbUsername = "root";
-	static String dbPassword = "Friday123!";
+	static String dbPassword = "admin";//"Friday123!";
 	
 	
 	public Client(Socket socket, String clientName) {
@@ -60,6 +60,10 @@ public class Client{
 		} catch(IOException e) {
 			closeEverything(socket, bufferedReader, bufferedWriter);
 		}
+	}
+	
+	public static String getUsername() {
+		return clientName;
 	}
 	
 	public void sendMessage() {
@@ -165,7 +169,7 @@ public class Client{
 		return success;
 	}
 
-	public static boolean validationTest(String user, String password) {
+	public static boolean validateUser(String user, String password) {
 		Connection connection;
 		try {
 			connection = DriverManager.getConnection(url, dbUsername, dbPassword);
@@ -211,7 +215,7 @@ public class Client{
 		
 	}
 	
-		private static String encrypt(String psswd) throws NoSuchAlgorithmException {
+	private static String encrypt(String psswd) throws NoSuchAlgorithmException {
 		String salt = getSalt();
 		String securePassword = get_SHA_256_SecurePassword(psswd, salt);
         //System.out.println(securePassword);
