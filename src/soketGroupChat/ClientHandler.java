@@ -7,7 +7,6 @@ import RSA.RSAUtil;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -15,10 +14,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -32,8 +29,6 @@ public class ClientHandler implements Runnable{
 	private BufferedWriter bufferedWriter;
 	private String clientUsername;
 	private RSAKeyPairGenerator keyPairGenerator;
-	//private String AESkey = "d8VBc9D7mrA=";
-
 	
 	public ClientHandler(Socket socket) {
 		try {
@@ -79,21 +74,11 @@ public class ClientHandler implements Runnable{
 	
 	public void broadcastMessage(String messageToSend) {
 		String publicKey;
-		String privateKey;
 		for(ClientHandler clientHandler: clientHandlers) {
 			try {
 				if(!clientHandler.clientUsername.equals(clientUsername)) {
 
 					publicKey =  Base64.getEncoder().encodeToString(map.get(clientUsername).getPublicKey().getEncoded());
-
-					privateKey = Base64.getEncoder().encodeToString(map.get(clientUsername).getPrivateKey().getEncoded());
-
-					//encrypt the message to be sent using RSA
-					//byte[] encryptedMessage = RSAUtil.encrypt(messageToSend,publicKey);
-
-					// byte[] to string
-					// encode, convert byte[] to base64 encoded string
-					//String s = Base64.getEncoder().encodeToString(encryptedMessage);
 
 
 					AES aes = new AES();
@@ -113,7 +98,7 @@ public class ClientHandler implements Runnable{
 					String encryptedAesKeyAsString = Base64.getEncoder().encodeToString(encryptedAesKeyAsByte);
 
 
-					String valueToSend = privateKey + "--" + encryptedAesKeyAsString + "--" + encryptedMessage;
+					String valueToSend = clientUsername + "--" + encryptedAesKeyAsString + "--" + encryptedMessage;
 					clientHandler.bufferedWriter.write(valueToSend);
 					clientHandler.bufferedWriter.newLine();
 					clientHandler.bufferedWriter.flush();

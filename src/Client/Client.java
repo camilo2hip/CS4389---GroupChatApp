@@ -7,6 +7,8 @@ import javax.crypto.SecretKey;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Scanner;
 
@@ -64,9 +66,15 @@ public class Client {
 
 						String[] parts = msgFromGroupChat.split("--");
 
-						String privateKey = parts[0];
+						String clientUsername = parts[0];
 						String encryptedAESKey = parts[1];
 						String encryptedMessage = parts[2];
+
+						String path = clientUsername + "/privateKey";
+						byte[] privateKeyFromFile = readFileAsString(path);
+
+						//encode the privateKey gotten from the file with base64
+						String privateKey = Base64.getEncoder().encodeToString(privateKeyFromFile);
 
 						//Decrypt the AES key encrypted with the client's public key using the client's private key
 						String decryptedAesKey = RSAUtil.decrypt(encryptedAESKey, privateKey);
@@ -77,8 +85,6 @@ public class Client {
 						//Decrypt the encrypted message using the decrypted AES key
 						String decryptedMessage = AES.decrypt(encryptedMessage, aesKey);
 
-
-						//String decryptedMessage = RSAUtil.decrypt(encryptedMessage, privateKey);
 
 						//display the message
 						System.out.println(decryptedMessage);
@@ -108,6 +114,12 @@ public class Client {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static byte[] readFileAsString(String fileName)throws Exception
+	{
+		return Files.readAllBytes(Paths.get(fileName));
+
 	}
 	
 	public static void main(String[] args) throws UnknownHostException, IOException {

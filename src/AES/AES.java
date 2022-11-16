@@ -1,11 +1,9 @@
 package AES;
 
 import javax.crypto.*;
-import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -15,15 +13,13 @@ import java.security.spec.KeySpec;
 import java.util.Base64;
 
 public class AES {
-    private static final String SECRET_KEY = "HELLO";
-    private static final String SALTVALUE = "abcdefg";
     private SecretKey key;
-    private static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     public SecretKey init(String secretKey, String saltValue) throws InvalidKeySpecException, NoSuchAlgorithmException {
         try {
             /* Create factory for secret keys. */
             SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+
             /* PBEKeySpec class implements KeySpec interface. */
             KeySpec spec = new PBEKeySpec(secretKey.toCharArray(), saltValue.getBytes(), 65536, 128);
             SecretKey tmp = factory.generateSecret(spec);
@@ -68,6 +64,7 @@ public class AES {
             SecretKeySpec secretKey = new SecretKeySpec(key.getEncoded(), "AES");
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
             cipher.init(Cipher.DECRYPT_MODE, secretKey, ivspec);
+
             /* Retruns decrypted value. */
             return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecrypt)));
         } catch (InvalidAlgorithmParameterException | InvalidKeyException | NoSuchAlgorithmException | BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException e) {
@@ -78,8 +75,11 @@ public class AES {
 
     /* Driver Code */
     public static void main(String[] args) throws InvalidKeySpecException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-        String key = "Samuel";
-        String salt = "Pamela";
+        //Main Function to test AES
+
+
+        String key = "CS 4389";
+        String salt = "Professor";
         AES aes = new AES();
         SecretKey key1 = aes.init(key,salt);
 
@@ -90,16 +90,19 @@ public class AES {
 
 
         /* Message to be encrypted. */
-        String originalval = "AES Encryption";
+        String originalValue = "Code testing";
+
         /* Call the encrypt() method and store result of encryption. */
-        String encryptedval = encrypt(originalval, key1);
+        String encryptedValue = encrypt(originalValue, key1);
+
         /* Call the decrypt() method and store result of decryption. */
-        String decryptedval = decrypt(encryptedval, key1);
-        String dval = decrypt(encryptedval, key2);
+        String decryptedValue = decrypt(encryptedValue, key1);
+        String dval = decrypt(encryptedValue, key2);
+
         /* Display the original message, encrypted message and decrypted message on the console. */
-        System.out.println("Original value: " + originalval);
-        System.out.println("Encrypted value: " + encryptedval);
-        System.out.println("Decrypted value: " + decryptedval);
+        System.out.println("Original value: " + originalValue);
+        System.out.println("Encrypted value: " + encryptedValue);
+        System.out.println("Decrypted value: " + decryptedValue);
         System.out.println("Decrypted value with String to Key: " + dval);
     }
 }
