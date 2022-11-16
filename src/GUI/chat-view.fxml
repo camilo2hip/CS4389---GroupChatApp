@@ -41,7 +41,7 @@
                   <HBox fx:id="userInputBox" prefHeight="129.0" prefWidth="417.0">
                      <children>
                         <TextField fx:id="messageTextField" prefHeight="127.0" prefWidth="362.0" />
-                        <Button fx:id="messageSendButton" mnemonicParsing="false" prefHeight="129.0" prefWidth="56.0" text="SEND" />
+                        <Button fx:id="messageSendButton" onAction="#onSendButtonClick" mnemonicParsing="false" prefHeight="129.0" prefWidth="56.0" text="SEND" />
                      </children>
                   </HBox>
                </children>
