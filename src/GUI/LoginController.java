@@ -23,6 +23,7 @@ public class LoginController {
     @FXML
     public void onLoginButtonClick() throws IOException
     {
+    	System.out.println("In onLoginButtonClick method");
         String password = passwordTextField.getText();
         String username = usernameTextField.getText();
         
@@ -31,9 +32,13 @@ public class LoginController {
 			welcomeText.setText("Logging in...");
 			Stage stage = (Stage) loginButton.getScene().getWindow();
         	stage.close();
-        	
-        	GUIResources.setChatRoomScene(stage);
-        	GUIResources.User = username;
+			GUIResources.setChatRoomScene(stage);
+			
+			GUIResources.currentUser = new Client(GUIResources.currentSocket, username);
+			System.out.println("You are connected!");
+			Client client = GUIResources.currentUser;
+			ChatGUIController.listenForMessage();
+			client.sendMessage("");
 			
 		}
         else {

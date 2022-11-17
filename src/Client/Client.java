@@ -38,7 +38,7 @@ import javafx.stage.Stage;
 public class Client{
 
 	private Socket socket;
-	private BufferedReader bufferedReader;
+	public BufferedReader bufferedReader;
 	private BufferedWriter bufferedWriter;
 	private static String clientName;
 	
@@ -48,7 +48,7 @@ public class Client{
 	static String url = "jdbc:mysql://localhost:3306/" + databaseName;
 	
 	static String dbUsername = "root";
-	static String dbPassword = "admin";//"Friday123!";
+	static String dbPassword = "Friday123!";
 	
 	
 	public Client(Socket socket, String clientName) {
@@ -65,27 +65,32 @@ public class Client{
 	public static String getUsername() {
 		return clientName;
 	}
+
 	
-	public void sendMessage() {
+	public void sendMessage(String message) {
 		try {
-			bufferedWriter.write(clientName);
+//			bufferedWriter.write(clientName);
+//			bufferedWriter.newLine();
+//			bufferedWriter.flush();
+			bufferedWriter.write(clientName + ": " + message);
 			bufferedWriter.newLine();
 			bufferedWriter.flush();
 			
-			Scanner scanner = new Scanner(System.in);
-			while(socket.isConnected()) {
-				String messageToSend = scanner.nextLine();
-				bufferedWriter.write(clientName + ": " + messageToSend);
-				bufferedWriter.newLine();
-				bufferedWriter.flush();
-			}
+			
+//			Scanner scanner = new Scanner(System.in);
+//			while(socket.isConnected()) {
+//				String messageToSend = scanner.nextLine();
+//				bufferedWriter.write(clientName + ": " + messageToSend);
+//				bufferedWriter.newLine();
+//				bufferedWriter.flush();
+//			}
 		} catch (IOException e) {
 			closeEverything(socket, bufferedReader, bufferedWriter);
 		}
 	}
 	
 	public void listenForMessage() {
-		new Thread(new Runnable() {
+		Thread thread = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				String msgFromGroupChat;
@@ -113,6 +118,7 @@ public class Client{
 						//String decryptedMessage = RSAUtil.decrypt(encryptedMessage, privateKey);
 
 						//display the message
+						//GUIResources.updateMessageScreen(decryptedMessage);
 						System.out.println(decryptedMessage);
 
 					} catch (IOException e) {
@@ -122,9 +128,27 @@ public class Client{
 					}
 				}
 			}
-		}).start();
+		});
+		
+		thread.setDaemon(true);
+		thread.start();
 	}
 	
+	public void closeEverything() {
+		try{
+			if (bufferedReader != null) {
+				bufferedReader.close();
+			}
+			if (bufferedWriter != null) {
+				bufferedWriter.close();
+			}
+			if(socket != null) {
+				socket.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
 		try{
@@ -256,6 +280,8 @@ public class Client{
 		Class.forName("com.mysql.jdbc.Driver").newInstance();
 		try (Connection connection = DriverManager.getConnection(url, dbUsername, dbPassword);) {
 		 	System.out.println("Database Connected!");
+		 	
+		 	//this.socket = socket;
 		 	GUIResources.launchGUI();
 		 	
 		 	Scanner scanner = new Scanner(System.in);
@@ -263,45 +289,42 @@ public class Client{
 		 	//String clientName;
 		 	//String psswd;
 		 	//String encPsswd;
-		 	
-		 	while(!loggedIn) {
-				/*
-				System.out.println("Enter your usernmae for the group chat: ");
-				clientName = scanner.nextLine();
-				System.out.println("Enter Password");
-				psswd = scanner.nextLine();
-				try {
-					encPsswd = encrypt(psswd);
-					if(validatePsswd(connection, clientName, encPsswd)) {
-						System.out.println("Logging in...");
-						break;
-					}
-					else {
-						System.out.println("Username or Password incorrect, retry");
-					}
-				} catch (NoSuchAlgorithmException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				*/				
-
-		 	}
+//		 	while(!loggedIn) {
+//				/*
+//				System.out.println("Enter your usernmae for the group chat: ");
+//				clientName = scanner.nextLine();
+//				System.out.println("Enter Password");
+//				psswd = scanner.nextLine();
+//				try {
+//					encPsswd = encrypt(psswd);
+//					if(validatePsswd(connection, clientName, encPsswd)) {
+//						System.out.println("Logging in...");
+//						break;
+//					}
+//					else {
+//						System.out.println("Username or Password incorrect, retry");
+//					}
+//				} catch (NoSuchAlgorithmException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				*/				
+//
+//		 	}
+//			
 			
-		 	Socket socket = new Socket("localhost", 1234);
-			Client client = new Client(socket, clientName);
-			System.out.println("You are connected!");
-			client.listenForMessage();
-			client.sendMessage();
+		 	
+		 	//Socket socket = new Socket("localhost", 1234);
+//			Client client = new Client(socket, clientName);
+//			System.out.println("You are connected!");
+//			
+//			client.listenForMessage();
+//			client.sendMessage("");
 	       }
 	       // Handle any errors that may have occurred.
 	       catch (SQLException e) {
 	           e.printStackTrace();
 	       }
-		 
-		
-		
-		
-	
 	}
 }
 
