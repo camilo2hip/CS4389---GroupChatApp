@@ -55,6 +55,7 @@ public class Client{
 	
 	public Queue<String> messageQueue;
 	
+	public static String body = "Welcome to the chat room! \n";
 	
 	public Client(Socket socket, String clientName) {
 		try {
@@ -62,13 +63,13 @@ public class Client{
 			this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			this.clientName = clientName;
-			System.out.println("Testing 1");
 			messageQueue = new LinkedList<String>();
-			System.out.println("Testing 2");
+			
 		} catch(IOException e) {
+			System.out.println("CLOSING1");
 			closeEverything(socket, bufferedReader, bufferedWriter);
 		}		
-		System.out.println("Testing 3");
+
 		listenForMessage();
 	}
 	
@@ -79,66 +80,17 @@ public class Client{
 	
 	public void sendMessage(String message) {
 		try {
-//			bufferedWriter.write(clientName);
-//			bufferedWriter.newLine();
-//			bufferedWriter.flush();
 			bufferedWriter.write(clientName + ": " + message);
 			bufferedWriter.newLine();
 			bufferedWriter.flush();
-			
-			
-//			Scanner scanner = new Scanner(System.in);
-//			while(socket.isConnected()) {
-//				String messageToSend = scanner.nextLine();
-//				bufferedWriter.write(clientName + ": " + messageToSend);
-//				bufferedWriter.newLine();
-//				bufferedWriter.flush();
-//			}
+
 		} catch (IOException e) {
+			System.out.println("CLOSING2");
 			closeEverything(socket, bufferedReader, bufferedWriter);
 		}
 	}
 	
 	public void listenForMessage() {
-//		Thread thread = new Thread(new Runnable() {
-//			@Override
-//			public void run() {
-//				String msgFromGroupChat;
-//
-//				while(socket.isConnected()) {
-//					try {
-//						msgFromGroupChat = bufferedReader.readLine();
-//
-//						String[] parts = msgFromGroupChat.split("--");
-//
-//						String privateKey = parts[0];
-//						String encryptedAESKey = parts[1];
-//						String encryptedMessage = parts[2];
-//
-//						//Decrypt the AES key encrypted with the client's public key using the client's private key
-//						String decryptedAesKey = RSAUtil.decrypt(encryptedAESKey, privateKey);
-//
-//						//get the AES key
-//						SecretKey aesKey = AESUtil.convertStringToSecretKeyto(decryptedAesKey);
-//
-//						//Decrypt the encrypted message using the decrypted AES key
-//						String decryptedMessage = AES.decrypt(encryptedMessage, aesKey);
-//
-//
-//						//String decryptedMessage = RSAUtil.decrypt(encryptedMessage, privateKey);
-//
-//						//display the message
-//						messageQueue.add(decryptedMessage);
-//						System.out.println(decryptedMessage);
-//
-//					} catch (IOException e) {
-//						closeEverything(socket, bufferedReader, bufferedWriter);
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					}
-//				}
-//			}
-//		});
 		Thread thread = new Thread(new ClientRunnable(this));
 		thread.setDaemon(true);
 		thread.start();

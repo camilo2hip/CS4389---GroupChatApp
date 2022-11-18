@@ -1,5 +1,6 @@
 package GUI;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -51,70 +52,24 @@ public class ChatGUIController
         message = messageTextField.getText();
         messageTextField.clear();
         updateMessageScreen(Client.getUsername(), message);
+        Client.body += username + ": " + message;
+        
+        if(message.charAt(message.length() - 1) != '\n') {
+        	Client.body += "\n";
+        }
         GUIResources.currentUser.sendMessage(message);
-
-    }
-    
-
-    @FXML
-    public void updateUserMenu() {
 
     }
 
     public void updateMessageScreen(String message) 
     {
-    	messageTextDisplayArea.appendText(message + "\n");
+    	Platform.runLater(() -> messageTextDisplayArea.appendText(message + "\n"));
     }
     
     public void updateMessageScreen(String username, String message) 
     {
+    	
     	updateMessageScreen(username + ": " + message);
     }
-
-    public static void listenForMessage() {
-		Thread thread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				String msgFromGroupChat;
-
-				while(GUIResources.currentSocket.isConnected()) {
-					try {
-						msgFromGroupChat = GUIResources.currentUser.bufferedReader.readLine();
-						
-						String[] parts = msgFromGroupChat.split("--");
-
-						String privateKey = parts[0];
-						String encryptedAESKey = parts[1];
-						String encryptedMessage = parts[2];
-
-						//Decrypt the AES key encrypted with the client's public key using the client's private key
-						String decryptedAesKey = RSAUtil.decrypt(encryptedAESKey, privateKey);
-
-						//get the AES key
-						SecretKey aesKey = AESUtil.convertStringToSecretKeyto(decryptedAesKey);
-
-						//Decrypt the encrypted message using the decrypted AES key
-						String decryptedMessage = AES.decrypt(encryptedMessage, aesKey);
-
-
-						//String decryptedMessage = RSAUtil.decrypt(encryptedMessage, privateKey);
-
-						//display the message
-						System.out.println(decryptedMessage);
-						//updateMessageScreen(decryptedMessage);
-					} 
-						catch (IOException e) {
-						GUIResources.currentUser.closeEverything();
-					} 
-				catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		});
-		
-		thread.setDaemon(true);
-		thread.start();
-	}
 
 }

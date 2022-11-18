@@ -13,7 +13,7 @@ import Client.Client;
 
 public class ClientRunnable implements Runnable {
 	private Client client;
-	
+
 	public ClientRunnable(Client client) {
 		this.client = client;
 	}
@@ -23,12 +23,12 @@ public class ClientRunnable implements Runnable {
 		// TODO Auto-generated method stub
 		String msgFromGroupChat;
 
-		while(client.socket.isConnected()) {
+		while (client.socket.isConnected()) {
 			try {
-				System.out.println("Reading buffer...");
+
 				msgFromGroupChat = client.bufferedReader.readLine();
 
-				if(msgFromGroupChat != null && !msgFromGroupChat.isEmpty()) {
+				if (msgFromGroupChat != null && !msgFromGroupChat.isEmpty()) {
 					System.out.println("Message found!");
 					String[] parts = msgFromGroupChat.split("--");
 
@@ -36,21 +36,25 @@ public class ClientRunnable implements Runnable {
 					String encryptedAESKey = parts[1];
 					String encryptedMessage = parts[2];
 
-					//Decrypt the AES key encrypted with the client's public key using the client's private key
+					// Decrypt the AES key encrypted with the client's public key using the client's
+					// private key
 					String decryptedAesKey = RSAUtil.decrypt(encryptedAESKey, privateKey);
 
-					//get the AES key
+					// get the AES key
 					SecretKey aesKey = AESUtil.convertStringToSecretKeyto(decryptedAesKey);
 
-					//Decrypt the encrypted message using the decrypted AES key
+					// Decrypt the encrypted message using the decrypted AES key
 					String decryptedMessage = AES.decrypt(encryptedMessage, aesKey);
 
+					// String decryptedMessage = RSAUtil.decrypt(encryptedMessage, privateKey);
 
-					//String decryptedMessage = RSAUtil.decrypt(encryptedMessage, privateKey);
-
-					//display the message
+					// display the message
 					System.out.println("Adding to queue...");
 					client.messageQueue.add(decryptedMessage);
+					Client.body += decryptedMessage;
+					if(decryptedMessage.charAt(decryptedMessage.length() - 1) != '\n') {
+						Client.body += "\n";
+					}
 					System.out.println(decryptedMessage);
 				}
 
@@ -60,6 +64,6 @@ public class ClientRunnable implements Runnable {
 				e.printStackTrace();
 			}
 		}
-		
+
 	}
 }
