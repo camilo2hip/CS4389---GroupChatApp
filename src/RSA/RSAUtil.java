@@ -61,15 +61,17 @@ public static String decrypt(String data, String base64PrivateKey) throws Illega
         }
 
 public static void main(String[] args) throws IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, BadPaddingException {
+        //Main Function to test RSA
+
         try {
                 String publicKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDNxyHpCmgBfxJmeJOnrd8vmfhUo6Y2ulqwyUnIJ8LH/FHS8XiBn0acUUnSpDUmBkuah58eyLIbGVmyteeRHZBLhCU9jC3vybvfALkpmorPAKbza1qpn7MnMn+wUuHXD5LKsxlPPhyB6LSQuWxF2jOAgWvOCi/iuRE0b1rSPeiOMwIDAQAB";
                 String privateKey = "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAM3HIekKaAF/EmZ4k6et3y+Z+FSjpja6WrDJScgnwsf8UdLxeIGfRpxRSdKkNSYGS5qHnx7IshsZWbK155EdkEuEJT2MLe/Ju98AuSmais8ApvNrWqmfsycyf7BS4dcPksqzGU8+HIHotJC5bEXaM4CBa84KL+K5ETRvWtI96I4zAgMBAAECgYA348YKDZGCFolg247/E/Jyc1dHZctXQfYv3fv0KRh2SMnQiVU5n5EGE+4BECh/U2ZlakCFk+0L/y6lo1Jpz6XI356VVGMyo2r/wS3gi8fq1p/Me23bT49qkJsVHxJeLnP8d3HH2DufO6kRaj/WtjGPPkHWW76m2BGGt/5+A5fyAQJBAM8x5t6pqSfhpMzdFUQo7ItYuQY40vIwufvftRp85adBS8YTEgmFE9Lkgv0hB6uObo19tTgSGsnNQ9q68OhHbCECQQD+P8eeyCxN5TokeellyxDYyo8lIJdRp8oQOuEvxb6n6cnHMjNljjuzb3LSe1KTUKffqiW96NFjPJf3JxmRJI/TAkA4tF+K8MPqtkZ0Cs2XKdwTBuUcXtDcl5lO5Zqa9TOk4qnqO63kDRevz/pJbJC80u5Oqui9v7a1JAg+BIuKBoIBAkAXBFUhBcQlBSR/Wt4LThfnWGcfGFU6mjMLxxjNx1wcPWj79Ip8niS/eM5vSaTPG1UnRXMHP0V9c2XahRqmbiXrAkEAgyJAiDWmfCOzYpwzm3Z94t/Jt8HDN3VCEQj9yYXE4qvVj62Zlk2FtWwihmHl5uLLZVaECR33vEuquDXIfyq6JA==";
 
-                String encryptedString = Base64.getEncoder().encodeToString(encrypt("Samuel Osezua was here!", publicKey));
+                String encryptedString = Base64.getEncoder().encodeToString(encrypt("Testing code...", publicKey));
         System.out.println(encryptedString);
 
                 String decryptedString = RSAUtil.decrypt(encryptedString, privateKey);
-        System.out.println(decryptedString);
+        System.out.println("The decrypted string: " + decryptedString);
         } catch (NoSuchAlgorithmException e) {
         System.err.println(e.getMessage());
         }
