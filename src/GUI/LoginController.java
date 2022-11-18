@@ -36,9 +36,10 @@ public class LoginController {
 			
 			GUIResources.currentUser = new Client(GUIResources.currentSocket, username);
 			System.out.println("You are connected!");
-			Client client = GUIResources.currentUser;
-			ChatGUIController.listenForMessage();
-			client.sendMessage("");
+			Client client = new Client(GUIResources.currentSocket, username);
+			GUIResources.currentUser = client;
+			//ChatGUIController.listenForMessage();
+			client.sendMessage(" connected.");
 			
 		}
         else {

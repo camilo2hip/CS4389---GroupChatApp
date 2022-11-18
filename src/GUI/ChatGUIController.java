@@ -27,6 +27,23 @@ public class ChatGUIController
 	public static String username = "DefaultName";
 	public String message;
 	public String decryptedMessage = "";
+	public static boolean printerRunning = false;
+	
+	public void initialize() throws InterruptedException {
+		if(printerRunning || GUIResources.currentUser != null) {
+			return;
+		}
+		GUIResources.currentUser = new Client(GUIResources.currentSocket, Client.getUsername());
+		System.out.println("user found... listening... \n");
+		Thread.sleep(500);
+        if(!printerRunning) {
+        	System.out.println("Testing: " + (GUIResources.currentUser == null));
+        	Thread thread = new Thread(new PrinterRunnable(GUIResources.currentUser, messageTextDisplayArea));
+        	thread.setDaemon(true);
+        	thread.start();
+        }
+	}
+	
     @FXML
     public void onSendButtonClick() throws IOException 
     {
@@ -34,7 +51,8 @@ public class ChatGUIController
         message = messageTextField.getText();
         messageTextField.clear();
         updateMessageScreen(Client.getUsername(), message);
-        //GUIResources.currentUser.sendMessage(message);
+        GUIResources.currentUser.sendMessage(message);
+
     }
     
 

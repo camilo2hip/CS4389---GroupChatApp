@@ -3,12 +3,15 @@ package Client;
 import AES.AES;
 import RSA.RSAUtil;
 import javafx.stage.Stage;
+import soketGroupChat.ClientRunnable;
 import AES.AESUtil;
 import javax.crypto.SecretKey;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Base64;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -37,9 +40,9 @@ import javafx.stage.Stage;
 
 public class Client{
 
-	private Socket socket;
+	public Socket socket;
 	public BufferedReader bufferedReader;
-	private BufferedWriter bufferedWriter;
+	BufferedWriter bufferedWriter;
 	private static String clientName;
 	
 	
@@ -48,7 +51,9 @@ public class Client{
 	static String url = "jdbc:mysql://localhost:3306/" + databaseName;
 	
 	static String dbUsername = "root";
-	static String dbPassword = "Friday123!";
+	static String dbPassword = "admin";//"Friday123!";
+	
+	public Queue<String> messageQueue;
 	
 	
 	public Client(Socket socket, String clientName) {
@@ -57,9 +62,14 @@ public class Client{
 			this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			this.clientName = clientName;
+			System.out.println("Testing 1");
+			messageQueue = new LinkedList<String>();
+			System.out.println("Testing 2");
 		} catch(IOException e) {
 			closeEverything(socket, bufferedReader, bufferedWriter);
-		}
+		}		
+		System.out.println("Testing 3");
+		listenForMessage();
 	}
 	
 	public static String getUsername() {
@@ -90,46 +100,46 @@ public class Client{
 	}
 	
 	public void listenForMessage() {
-		Thread thread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				String msgFromGroupChat;
-
-				while(socket.isConnected()) {
-					try {
-						msgFromGroupChat = bufferedReader.readLine();
-
-						String[] parts = msgFromGroupChat.split("--");
-
-						String privateKey = parts[0];
-						String encryptedAESKey = parts[1];
-						String encryptedMessage = parts[2];
-
-						//Decrypt the AES key encrypted with the client's public key using the client's private key
-						String decryptedAesKey = RSAUtil.decrypt(encryptedAESKey, privateKey);
-
-						//get the AES key
-						SecretKey aesKey = AESUtil.convertStringToSecretKeyto(decryptedAesKey);
-
-						//Decrypt the encrypted message using the decrypted AES key
-						String decryptedMessage = AES.decrypt(encryptedMessage, aesKey);
-
-
-						//String decryptedMessage = RSAUtil.decrypt(encryptedMessage, privateKey);
-
-						//display the message
-						//GUIResources.updateMessageScreen(decryptedMessage);
-						System.out.println(decryptedMessage);
-
-					} catch (IOException e) {
-						closeEverything(socket, bufferedReader, bufferedWriter);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		});
-		
+//		Thread thread = new Thread(new Runnable() {
+//			@Override
+//			public void run() {
+//				String msgFromGroupChat;
+//
+//				while(socket.isConnected()) {
+//					try {
+//						msgFromGroupChat = bufferedReader.readLine();
+//
+//						String[] parts = msgFromGroupChat.split("--");
+//
+//						String privateKey = parts[0];
+//						String encryptedAESKey = parts[1];
+//						String encryptedMessage = parts[2];
+//
+//						//Decrypt the AES key encrypted with the client's public key using the client's private key
+//						String decryptedAesKey = RSAUtil.decrypt(encryptedAESKey, privateKey);
+//
+//						//get the AES key
+//						SecretKey aesKey = AESUtil.convertStringToSecretKeyto(decryptedAesKey);
+//
+//						//Decrypt the encrypted message using the decrypted AES key
+//						String decryptedMessage = AES.decrypt(encryptedMessage, aesKey);
+//
+//
+//						//String decryptedMessage = RSAUtil.decrypt(encryptedMessage, privateKey);
+//
+//						//display the message
+//						messageQueue.add(decryptedMessage);
+//						System.out.println(decryptedMessage);
+//
+//					} catch (IOException e) {
+//						closeEverything(socket, bufferedReader, bufferedWriter);
+//					} catch (Exception e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			}
+//		});
+		Thread thread = new Thread(new ClientRunnable(this));
 		thread.setDaemon(true);
 		thread.start();
 	}
@@ -166,32 +176,6 @@ public class Client{
 		}
 	}
 	
-	
-	public static boolean validatePsswd(Connection connection, String clientName, String psswd) {
-		String query = "SELECT * FROM login.users WHERE idusers=? and psswd=?";
-		PreparedStatement stmt = null;
-		boolean success = false;
-		try {
-			stmt = connection.prepareStatement(query);
-			stmt.setString(1, clientName);
-			stmt.setString(2, psswd);
-			ResultSet rs = stmt.executeQuery();
-			if(rs.next())
-				success = true;
-			rs.close();
-		}catch (Exception e) {
-			e.printStackTrace();
-		}finally {
-			try {
-				stmt.close();
-				
-			}catch (Exception e) {
-				
-			}
-		}
-		
-		return success;
-	}
 
 	public static boolean validateUser(String user, String password) {
 		Connection connection;
@@ -281,45 +265,7 @@ public class Client{
 		try (Connection connection = DriverManager.getConnection(url, dbUsername, dbPassword);) {
 		 	System.out.println("Database Connected!");
 		 	
-		 	//this.socket = socket;
 		 	GUIResources.launchGUI();
-		 	
-		 	Scanner scanner = new Scanner(System.in);
-
-		 	//String clientName;
-		 	//String psswd;
-		 	//String encPsswd;
-//		 	while(!loggedIn) {
-//				/*
-//				System.out.println("Enter your usernmae for the group chat: ");
-//				clientName = scanner.nextLine();
-//				System.out.println("Enter Password");
-//				psswd = scanner.nextLine();
-//				try {
-//					encPsswd = encrypt(psswd);
-//					if(validatePsswd(connection, clientName, encPsswd)) {
-//						System.out.println("Logging in...");
-//						break;
-//					}
-//					else {
-//						System.out.println("Username or Password incorrect, retry");
-//					}
-//				} catch (NoSuchAlgorithmException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//				*/				
-//
-//		 	}
-//			
-			
-		 	
-		 	//Socket socket = new Socket("localhost", 1234);
-//			Client client = new Client(socket, clientName);
-//			System.out.println("You are connected!");
-//			
-//			client.listenForMessage();
-//			client.sendMessage("");
 	       }
 	       // Handle any errors that may have occurred.
 	       catch (SQLException e) {
@@ -327,4 +273,6 @@ public class Client{
 	       }
 	}
 }
+
+
 
