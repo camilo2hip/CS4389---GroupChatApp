@@ -54,7 +54,7 @@ public class ChatGUIController
         updateMessageScreen(Client.getUsername(), message);
         Client.body += username + ": " + message;
         
-        if(message.charAt(message.length() - 1) != '\n') {
+        if(message.equals("") || message.charAt(message.length() - 1) != '\n') {
         	Client.body += "\n";
         }
         GUIResources.currentUser.sendMessage(message);

@@ -40,9 +40,12 @@ public class ClientHandler implements Runnable{
 	public ClientHandler(Socket socket) {
 		try {
 			this.socket = socket;
+			System.out.println(socket.isClosed());
 			this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			this.clientUsername = bufferedReader.readLine().split(":")[0];
+			String temp = bufferedReader.readLine();
+			
+			this.clientUsername = temp.split(":")[0];
 
 			//Generate the user's public and private key and save it in an encoded file
 			boolean succ = new File("." + File.separatorChar + clientUsername + File.separatorChar).mkdirs();
